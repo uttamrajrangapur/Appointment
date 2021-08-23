@@ -1,0 +1,6 @@
+{
+  "start_hour_in_milliseconds": 36000000,
+  "end_hour_in_milliseconds": 61200000,
+  "duration": 1800000,
+  "timezone": "America/Los_Angeles"
+}

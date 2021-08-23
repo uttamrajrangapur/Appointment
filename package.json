@@ -1,0 +1,23 @@
+{
+  "name": "Appointment",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/uttamrajrangapur/Appointment.git",
+  "author": "uttamraj-pando <uttamrajpando@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "node backend/app.js"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^4.14.2",
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "firebase-admin": "^9.11.1",
+    "joi": "^17.4.2",
+    "lodash": "^4.17.21",
+    "moment-timezone": "^0.5.33",
+    "nconf": "^0.11.3",
+    "uuid": "^8.3.2",
+    "winston": "^3.3.3"
+  }
+}
