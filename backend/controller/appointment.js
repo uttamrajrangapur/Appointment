@@ -61,14 +61,6 @@ async function createEvents(req, res, next) {
       return res.json({ error: `Duration should be ${AppointmentConfig.get('duration')} Milliseconds`});
     }
     const date = moment(data.dateTime).utc();
-    const date1 = moment(data.dateTime).format("YYYY-MM-DD");
-    const startInterval = moment.tz(data.date, data.timezone).hour(0).minute(0).second(0).millisecond(0);
-    let possibleSlots = getPossibleSlots(date, startInterval);
-    possibleSlots = convertIntoRequiredTimezone(possibleSlots);
-    if(!possibleSlots.includes(date.format())) {
-      res.status(400);
-      return res.json({ error: `Invalid slot.Use one of the slots from the free slots API`});
-    }
     const slotBooked = await eventCollection.getEvents(
       ['startTime', '>=', date.toDate()],
       ['endTime', '<=', date.add(AppointmentConfig.get('duration'), 'ms').toDate()]
