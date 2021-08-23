@@ -3,13 +3,19 @@ const minToMillisecondsConverter = 60 * 1000;
 const moment = require('moment-timezone');
 const eventCollection = require('../models/events');
 
-function getPossibleSlots(data) {
+function getPossibleSlots(date, startInterval) {
+  const endInterval = moment(startInterval).add(1, 'd');
   const result = [];
-  const startTime = moment().tz(AppointmentConfig.get('timezone')).hour(0).minute(0).second(0).millisecond(AppointmentConfig.get('start_hour_in_milliseconds'));
-  const endTime = moment().tz(AppointmentConfig.get('timezone')).hour(0).minute(0).second(0).millisecond(AppointmentConfig.get('end_hour_in_milliseconds'));
-  while(startTime.isBefore(endTime)) {
-    result.push(startTime.toISOString());
-    startTime.add(AppointmentConfig.get('duration'), 'ms');
+  const startTime = moment(startInterval).tz(AppointmentConfig.get('timezone')).hour(0).minute(0).second(0).millisecond(AppointmentConfig.get('start_hour_in_milliseconds')).subtract(2, 'days');
+  const endTime = moment(startInterval).tz(AppointmentConfig.get('timezone')).hour(0).minute(0).second(0).millisecond(AppointmentConfig.get('end_hour_in_milliseconds')).subtract(2, 'days');
+  for(let i = 0; i < 5; i++) {
+    while(startTime.isBefore(endTime)) {
+      if(startTime.isSameOrAfter(startInterval) && startTime.isBefore(endInterval))
+        result.push(startTime.toISOString());
+      startTime.add(AppointmentConfig.get('duration'), 'ms');
+    }
+    startTime.add(1, 'd').hour(0).minute(0).second(0).millisecond(AppointmentConfig.get('start_hour_in_milliseconds'));;
+    endTime.add(1, 'd').hour(0).minute(0).second(0).millisecond(AppointmentConfig.get('end_hour_in_milliseconds'));
   }
   return result;
 }
@@ -24,13 +30,14 @@ function convertIntoRequiredTimezone(slots, timezone = 'UTC') {
 
 async function getFreeSlots(req, res, next) {
   try {
-    const date = moment.tz(moment(date).hour(0).minute(0).second(0).millisecond(0).toDate(), req.query.timezone);
-    let result = getPossibleSlots();
-    result = convertIntoRequiredTimezone(result);
     const date = req.query.date;
+    const startInterval = moment.tz(req.query.date, req.query.timezone).hour(0).minute(0).second(0).millisecond(0);
+    let result = getPossibleSlots(date, startInterval);
+    result = convertIntoRequiredTimezone(result);
+    
     let events = await eventCollection.getEvents(
-      ['startTime', '>', moment(date).hour(0).minute(0).second(0).millisecond(0).toDate()], 
-      ['endTime', '<', moment(date).hour(23).minute(59).second(59).millisecond(999).toDate()]
+      ['startTime', '>', moment.tz(date, req.query.timezone).hour(0).minute(0).second(0).millisecond(0).toDate()], 
+      ['endTime', '<', moment.tz(date, req.query.timezone).hour(23).minute(59).second(59).millisecond(999).toDate()]
     );
     result = result.filter(res => {
       return !events.find(e =>  {
@@ -54,7 +61,9 @@ async function createEvents(req, res, next) {
       return res.json({ error: `Duration should be ${AppointmentConfig.get('duration')} Milliseconds`});
     }
     const date = moment(data.dateTime).utc();
-    let possibleSlots = getPossibleSlots();
+    const date1 = moment(data.dateTime).format("YYYY-MM-DD");
+    const startInterval = moment.tz(data.date, data.timezone).hour(0).minute(0).second(0).millisecond(0);
+    let possibleSlots = getPossibleSlots(date, startInterval);
     possibleSlots = convertIntoRequiredTimezone(possibleSlots);
     if(!possibleSlots.includes(date.format())) {
       res.status(400);

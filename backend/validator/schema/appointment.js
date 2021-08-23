@@ -10,6 +10,8 @@ class AppointmentRequestValidation {
   }
   static createEvents() {
     return Joi.object().keys({
+      date: Joi.date().iso(),
+      timezone: Joi.string().valid(...moment.tz.names()),
       duration: Joi.number().integer().positive(),
       dateTime: Joi.date().iso(),
     });

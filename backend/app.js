@@ -1,5 +1,4 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const jsonErrorHandler = require('./packages/error-handler');
 const app = express();
 
